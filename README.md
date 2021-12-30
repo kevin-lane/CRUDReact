@@ -1,3 +1,5 @@
+Built an CRUD (Create, Read, Update and Delete) App in SharePoint Framework using React in order to keep my refresh my knowledge in SharePoint, Office365 and programming. This app will be used by me as a training ground and will be updated with new functionality.
+
 # crud-react
 
 ## Summary
