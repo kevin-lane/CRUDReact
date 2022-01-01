@@ -23,6 +23,8 @@ export interface IListItems{
     selectionDetails: any;
     toUpdate: boolean;
     itemToUpdateID: number;
+    itemToUpdateTitle: string;
+    itemToUpdateCost: string;
     toDisable: boolean;
 }
 
@@ -34,7 +36,6 @@ export class List extends React.Component<IListItemProps, IListItems> {
         super(props);
 
         this.listItems = [];
-
         this.listColumns = [
             { key: 'column1', name: 'Title', fieldName: 'Title', minWidth: 100, maxWidth: 200, isResizable: true },
             { key: 'column2', name: 'Manufacturing Cost', fieldName: 'ManufacturingCost', minWidth: 100, maxWidth: 200, isResizable: true },
@@ -52,6 +53,8 @@ export class List extends React.Component<IListItemProps, IListItems> {
             selectionDetails: this.getSelectionDetails(),
             toUpdate: false,
             itemToUpdateID: null,
+            itemToUpdateTitle: '',
+            itemToUpdateCost: '',
             toDisable: false
         };
     }
@@ -93,7 +96,11 @@ export class List extends React.Component<IListItemProps, IListItems> {
         const selectionCount = this.itemSelection.getSelectedCount();
         const selectedItem = (this.itemSelection.getSelection() as any);
         selectedItem.map(res => {
-            this.setState({itemToUpdateID: res.ID});
+            this.setState({
+                itemToUpdateID: res.ID,
+                itemToUpdateTitle: res.Title,
+                itemToUpdateCost: res.ManufacturingCost
+            });
         });
 
         if (selectionCount > 1) {
@@ -135,6 +142,8 @@ export class List extends React.Component<IListItemProps, IListItems> {
                         actionButtonText="Update Item" 
                         toUpdateItem={this.state.toUpdate}
                         itemToUpdateID={this.state.itemToUpdateID}
+                        itemTitle={this.state.itemToUpdateTitle}
+                        itemCost={this.state.itemToUpdateCost}
                         buttonDisabled={this.state.toDisable} 
                     /> 
                     : 

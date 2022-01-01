@@ -13,7 +13,7 @@ export function SidePanel(props) {
   const [isOpen, { setTrue: openPanel, setFalse: dismissPanel }] = useBoolean(false);
   const [titleInput, setTitleInput] = React.useState('');
   const [costInput, setCostInput] = React.useState('');
-
+  
   async function addItem(){
     if (titleInput.trim() == "") {
       alert('Please enter a title!');
@@ -30,10 +30,13 @@ export function SidePanel(props) {
 
   async function updateItem(id) {
     id = props.itemToUpdateID;
+    var prevTitle = props.itemTitle;
+    var prevCost = props.itemCost;
+
     let list = sp.web.lists.getByTitle("Tulips");
     await list.items.getById(id).update({
-      Title: titleInput.trim(),
-      ManufacturingCost: costInput
+      Title: titleInput == "" ? prevTitle : titleInput.trim(),
+      ManufacturingCost: costInput == "" ? prevCost : costInput
     });
     alert(`Item with id ${id} has been updated!`);
     dismissPanel();
@@ -49,6 +52,7 @@ export function SidePanel(props) {
       >
       <TextField 
         label="Title" 
+        defaultValue={props.toUpdateItem ? props.itemTitle : ''}
         onChange={(e) => setTitleInput((e.target as HTMLInputElement).value)} 
         required 
       />
@@ -57,7 +61,7 @@ export function SidePanel(props) {
         label='Manufacturing Cost'
         type='number'
         min={0}
-        defaultValue='0'
+        defaultValue={props.toUpdateItem ? props.itemCost : '0'}
         onChange={(e) => setCostInput((e.target as HTMLInputElement).value)}
       />
       <br/>
