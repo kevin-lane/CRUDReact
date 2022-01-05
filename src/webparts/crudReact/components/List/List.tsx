@@ -1,13 +1,16 @@
 import * as React from 'react';
 import { ICrudReactProps } from '../ICrudReactProps';
 import { DetailsList, IColumn, Selection } from '@fluentui/react/lib/DetailsList';
-import { SPHttpClient, SPHttpClientResponse } from '@microsoft/sp-http';
+import { SPHttpClient, SPHttpClientResponse, MSGraphClient } from '@microsoft/sp-http';
 import { IListItemProps } from './IListItemProps';
 import { Icon } from '@fluentui/react';
 import { sp } from "@pnp/sp";
 import { DialogBox } from '../Dialog/DialogBox';
 import { MarqueeSelection } from '@fluentui/react/lib/MarqueeSelection';
 import { SidePanel } from '../Panel/SidePanel';
+import { graph } from '@pnp/graph';
+import "@pnp/graph/users";
+import { IMailMessage } from '../Mail/IMailMessage';
 
 export interface IListItemState{
     Title: string;
@@ -111,10 +114,10 @@ export class List extends React.Component<IListItemProps, IListItems> {
             this.setState({ toDisable: false });
             switch (selectionCount) {
                 case 0:
-                    this.setState({ toUpdate: false});
+                    this.setState({ toUpdate: false });
                     break;
                 case 1:
-                    this.setState({ toUpdate: true});
+                    this.setState({ toUpdate: true });
                     break;
             }
         }
@@ -124,8 +127,46 @@ export class List extends React.Component<IListItemProps, IListItems> {
         let message = `Are you sure you want to delete list item ${id}?`;
         if (confirm(message) == true) {
             let list = sp.web.lists.getByTitle("Tulips");
-            await list.items.getById(id).delete();
-            alert(`Item ${id} has been deleted!`);
+            var currentUser = await graph.me();
+
+            const deletedItem = await sp.web.lists.getByTitle("Tulips")
+                .items
+                .getById(id)
+                .select("Id", "Title", "Author/ID", "Author/Title", "Author/EMail")
+                .expand("Author")
+                .get();
+
+            await list.items.getById(id).delete().then();
+            alert(`Item ${id} has been deleted by ${currentUser.displayName}!`);
+            
+            const deletionMessage: IMailMessage = {
+                message: {
+                    subject: `Item ${deletedItem.Title}(${deletedItem.ID}) has been deleted`,
+                    body: {
+                        contentType: "HTML",
+                        content: `The list item ${deletedItem.Title} you created has been deleted by ${currentUser.displayName}!`
+                    },
+                    toRecipients: [
+                        {
+                            emailAddress: {
+                                address: deletedItem.Author.EMail
+                            }
+                        },
+                    ],
+                },
+                saveToSentItems: true
+            };
+
+            if (deletedItem.Author.EMail != currentUser.mail) {
+                this.props.context.msGraphClientFactory.getClient()
+                    .then((client: MSGraphClient) => {
+                        client.api('/me/sendMail').post(deletionMessage);
+                    });
+            }
+            else{
+                alert("You've deleted your own list item");
+            }
+            
         }
         else{
             return;
