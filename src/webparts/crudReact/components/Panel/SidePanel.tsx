@@ -23,6 +23,8 @@ export function SidePanel(props) {
         Title: titleInput.trim(),
         ManufacturingCost: costInput,
       });
+      console.log(iar.data);
+      
       alert(`New item has been added`);
       dismissPanel();
     }
@@ -38,8 +40,8 @@ export function SidePanel(props) {
       Title: titleInput == "" ? prevTitle : titleInput.trim(),
       ManufacturingCost: costInput == "" ? prevCost : costInput
     });
-    alert(`Item with id ${id} has been updated!`);
     dismissPanel();
+    alert(`Item with id ${id} has been updated!`);
   }
   
   return (

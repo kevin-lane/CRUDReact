@@ -63,7 +63,15 @@ export class List extends React.Component<IListItemProps, IListItems> {
     }
 
     public componentDidMount(): void {
+        console.log("componentDidMount Called");
         this._renderList();
+    }
+
+    public componentDidUpdate(prevProps: Readonly<IListItemProps>, prevState: Readonly<IListItems>, snapshot?: any): void {
+        if (this.state.items.length !== prevState.items.length) {
+            console.log("Updated");
+            this._getListData();
+        }
     }
 
     public _getListData() : Promise<IListItemState[]>{
@@ -72,7 +80,6 @@ export class List extends React.Component<IListItemProps, IListItems> {
             "/_api/web/lists/GetByTitle('Tulips')/Items", SPHttpClient.configurations.v1)
             .then((response: SPHttpClientResponse) => {
                 return response.json().then(data => {
-                    console.log(data.value);
                     return data.value;
                 });
             });
@@ -92,7 +99,7 @@ export class List extends React.Component<IListItemProps, IListItems> {
             this.setState({
                 items: this.state.items
             });
-        });
+        });        
     }
 
     private getSelectionDetails(){
@@ -139,6 +146,15 @@ export class List extends React.Component<IListItemProps, IListItems> {
             await list.items.getById(id).delete().then();
             alert(`Item ${id} has been deleted by ${currentUser.displayName}!`);
             
+            var itemsAfterDelete = this.state.items.filter(function(item) {
+                return item.ID != deletedItem.ID;
+            });
+            
+            this.setState({
+                items: itemsAfterDelete
+            });
+            console.log(this.state.items);
+
             const deletionMessage: IMailMessage = {
                 message: {
                     subject: `Item ${deletedItem.Title}(${deletedItem.ID}) has been deleted`,
@@ -159,12 +175,12 @@ export class List extends React.Component<IListItemProps, IListItems> {
 
             if (deletedItem.Author.EMail != currentUser.mail) {
                 this.props.context.msGraphClientFactory.getClient()
-                    .then((client: MSGraphClient) => {
+                    .then((client: MSGraphClient) => {                        
                         client.api('/me/sendMail').post(deletionMessage);
                     });
             }
             else{
-                alert("You've deleted your own list item");
+                return;
             }
             
         }
@@ -174,7 +190,8 @@ export class List extends React.Component<IListItemProps, IListItems> {
     }
     
     public render(): JSX.Element {
-        const { items } = this.state;
+        const { items } = this.state;        
+
         return (
             <div>
                 {this.state.toUpdate ? 
